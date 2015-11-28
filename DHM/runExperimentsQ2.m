@@ -18,12 +18,10 @@ function [DHMGeneralizationError, RandGeneralizationError, costcurve, queries] =
 % Read through the code carefully.  The parts that you have to implement
 % are labeled with comments, such as  IMPLEMENT THIS
 
-%% ALGORITHM PARAMETERS
-numsamples = 500;
+numsamples = 5120;
 
-% generate the data. DATA is a 1 by numsamples vector of values in the
-% interval [0,1]. TRUE_LABELS is a 1 by numsamples vector of labels (either
-% 0 or 1)
+% generate the data. DATA is a 5120 by 26 vector of values
+% TRUE_LABELS is a 1 by 5120 vector of labels in the range of [0, 7]
 [DATA, TRUE_LABELS, ~] = generateExpData();
 
 %% run the DHM algorithm
