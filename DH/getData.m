@@ -1,6 +1,8 @@
 function [data, labels, T]= getData
     data =csvread('pool.dat');
-    labels = load('trueLabels.mat');
+    data = data(1:500,:);
+    load trueLabels;
+    labels = trueLabels(1:500);    
     Z = linkage(data,'ward','euclidean');
     nsample = length(labels);
     parent = zeros(1, Z(end,2)+1);

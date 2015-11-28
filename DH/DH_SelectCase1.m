@@ -1,9 +1,9 @@
 function [L,loss] = DH_SelectCase1(data, labels, T)
 %% Main function for DH algorithm
 % Input:
-%       data: a 1000 by 25 matrix; each row represents the sample from the
+%       data: a 5120 by 26 matrix; each row represents the sample from the
 %       ith patient. each column is a protein concentration level
-%       labels: an 1000 by 1 matrix; each element (i, 1) represents the
+%       labels: an 5120 by 1 matrix; each element (i, 1) represents the
 %       true subtype of ith sample.
 %       T: a cell of length 3
 %           T{1}: the linkage of hierachical clustering tree on data,
@@ -35,7 +35,8 @@ L(root) = 1;
 
 for i = 1 : length(labels)  
     % Pick a random point z from subtree Tv
-    nodes = zeros(1, length(P))
+    i;
+    nodes = zeros(1, length(P));
     for j = 1 : length(P)
         nodes(j) = T{2}(j); 
     end
