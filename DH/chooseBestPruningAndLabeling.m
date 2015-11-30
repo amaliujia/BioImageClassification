@@ -10,6 +10,7 @@ function [Pbest, Lbest] = chooseBestPruningAndLabeling(n, p1, v, T, nsample)
 %       Pbest: the best new pruning
 %       Lbest: the best labeling for v
     p0_LB = max(1-p1 - (1./n + sqrt(p1.*(1-p1)./n)), 0);
+    % label x's ratoe
     p1_LB = max(p1 - (1./n + sqrt(p1.*(1-p1)./n)), 0);
     A0 = p0_LB > 1/3;
     A1 = p1_LB > 1/3;
@@ -50,6 +51,7 @@ function [Pbest, Lbest] = chooseBestPruningAndLabeling(n, p1, v, T, nsample)
     [~, best] = min([score0(v), score1(v), e0_tilde(v), e1_tilde(v)]);
     if best == 1
         Lbest = 0;
+        %Lbest = 1;
         if v <= nsample
             Pbest = [v];
         else
@@ -68,6 +70,7 @@ function [Pbest, Lbest] = chooseBestPruningAndLabeling(n, p1, v, T, nsample)
         end
     elseif best == 3
         Lbest = 0;
+        %Lbest = 1;
         Pbest = [v];
     else
         Lbest = 1;  

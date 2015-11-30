@@ -5,5 +5,11 @@ function loss = computeLoss(L, labels)
 %       labels: true labels of each node
 % Output:
 %       loss: squared loss of current prediction
-    loss = sum((L - labels') .* (L - labels'));
+    loss_vec = zeros(1, length(L));
+    for i = 1 : length(L)
+        if L(i) ~= labels(i)
+           loss_vec(i) = 1; 
+        end
+    end
+    loss = sum(loss_vec);
 end

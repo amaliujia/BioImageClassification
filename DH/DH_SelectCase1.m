@@ -19,7 +19,11 @@ function [L,loss] = DH_SelectCase1(data, labels, T)
 %       ith round querying
 
 cnts = zeros(1, 2*length(data)); 
-probs = zeros(1, 2*length(data)); 
+probs = [];
+length(data);
+for i = 1 : 8
+probs = [probs; zeros(1, 2*length(data))];
+end
 
 root = -1; 
 for i = 1 : length(T{3})
@@ -33,9 +37,8 @@ P = [root];
 L = zeros(1, 2*length(data)); 
 L(root) = 1;
 
-for i = 1 : length(labels)  
+for i = 1 : length(labels)
     % Pick a random point z from subtree Tv
-    i;
     nodes = zeros(1, length(P));
     for j = 1 : length(P)
         nodes(j) = T{2}(j); 
@@ -45,18 +48,22 @@ for i = 1 : length(labels)
     z = leaves(randi(length(leaves)));
     
     % Query z?s label l
-    l_z = labels(z); 
- 
-    % Update empirical counts and probabilities
-    [cnts, probs] = updateEmpirical(cnts, probs, P(selected_index), z, l_z, T);
-    [Pbest, Lbest] = chooseBestPruningAndLabeling(cnts, probs, P(selected_index), T, length(labels));
+    l_z = labels(z);
+    if (l_z ~= 0)
+        % Update empirical counts and probabilities
+        [cnts, probs(l_z, :)] = updateEmpirical(cnts, probs(l_z, :), P(selected_index), z, l_z, T);
+        [Pbest, Lbest] = chooseBestPruningAndLabeling(cnts, probs(l_z, :), P(selected_index), T, length(labels));
+        % Update A
+        if Lbest == 1
+            Lbest = l_z;
+        end
+        u = P(selected_index);
+        P(selected_index) = [];
+        P = [P, Pbest];
+        L(Pbest) = Lbest;
+        L = assignLabels(L, u, u, T, length(labels));
+    end
     
-    % Update A
-    u = P(selected_index);
-    P(selected_index) = [];
-    P = [P, Pbest];
-    L(Pbest) = Lbest;
-    L = assignLabels(L, u, u, T, length(labels));
     loss(i) = computeLoss(L(1:length(labels)), labels);
 end
 for i = 1 : length(P)
