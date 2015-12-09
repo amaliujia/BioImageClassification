@@ -18,11 +18,11 @@ function [DHMGeneralizationError, RandGeneralizationError, costcurve, queries] =
 % Read through the code carefully.  The parts that you have to implement
 % are labeled with comments, such as  IMPLEMENT THIS
 
-numsamples = 5120;
+numsamples = 500;
 
 % generate the data. DATA is a 5120 by 26 vector of values
 % TRUE_LABELS is a 1 by 5120 vector of labels in the range of [0, 7]
-[DATA, TRUE_LABELS, ~] = generateExpData();
+[DATA, TRUE_LABELS] = generateExpData();
 
 %% run the DHM algorithm
 
@@ -48,25 +48,35 @@ costcurve=zeros(1,numsamples);
 queries=0;
 
 for t=1:numsamples
-    partial_data = [DATA(S==1), DATA(t)];
+    partial_data = [DATA(S==1,:); DATA(t,:)];
     partial_label = [Slabels(S==1), 1];
-    [h1, flag_1] = learnQ2(partial_data, DATA(T==1), partial_label, Tlabels(T==1));
-    if(flag_1 == 1)
-       S(t) = 1;
-       Slabels(t) = 0;
-       costcurve(t) = cost;
-       continue;
+    h = zeros(9, 27);
+    for i = 1:9
+        [h(i,:), flag_c] = learnQ2(partial_data, DATA(T==1,:), partial_label, Tlabels(T==1), i-1);
+        if flag_c == 1
+           S(t) = 1;
+           Slabels(t) = i-1; % should not be this one.
+           costcurve(t) = cost;
+           continue;
+        end
     end
-    
-    partial_data = [DATA(S==1), DATA(t)];
-    partial_label = [Slabels(S==1), 0];    
-    [h0, flag_2] = learnQ2(partial_data, DATA(T==1), partial_label, Tlabels(T==1));
-    if(flag_2 == 1)
-       S(t) = 1;
-       Slabels(t) = 1;
-       costcurve(t) = cost;
-       continue;
-    end
+%     [h1, flag_1] = learnQ2(partial_data, DATA(T==1), partial_label, Tlabels(T==1));
+%     if(flag_1 == 1)
+%        S(t) = 1;
+%        Slabels(t) = 0;
+%        costcurve(t) = cost;
+%        continue;
+%     end
+%     
+%     partial_data = [DATA(S==1), DATA(t)];
+%     partial_label = [Slabels(S==1), 0];    
+%     [h0, flag_2] = learnQ2(partial_data, DATA(T==1), partial_label, Tlabels(T==1));
+%     if(flag_2 == 1)
+%        S(t) = 1;
+%        Slabels(t) = 1;
+%        costcurve(t) = cost;
+%        continue;
+%     end
     
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -76,43 +86,61 @@ for t=1:numsamples
     beta = sqrt( (4/t)*log(8*(t^2+t)*shatterCoeff^2/delta) );
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    SUnionT = [DATA(S==1), DATA(T==1)];
+    SUnionT = [DATA(S==1,:); DATA(T==1,:)];
     SUnionTLabels = [Slabels(S==1), Tlabels(T==1)];
-    err_h0 = getErr(h0, SUnionT, SUnionTLabels);
-    err_h1 = getErr(h1, SUnionT, SUnionTLabels);
-    Delta = (beta^2 + beta*(sqrt(err_h0)+sqrt(err_h1)))*.025;
-
-    if(err_h0 - err_h1 > Delta)
-       S(t) = 1;
-       Slabels(t) = 1;
-       costcurve(t) = cost;
-       continue;        
+    err_h = zeros(1,9);
+    for i = 1:9
+        err_h(i) = getErr(h(i,:), SUnionT, SUnionTLabels, i-1);
+    end
+%     err_h0 = getErr(h0, SUnionT, SUnionTLabels);
+%     err_h1 = getErr(h1, SUnionT, SUnionTLabels);
+    Delta = (beta^2 + beta*(sum(sqrt(err_h))))*.025;
+    min_err = inf;
+    min_i = -1;
+    for i = 1:9
+      if err_h(i) < min_err
+          min_err = err_h(i);
+          min_i = i;
+      end
     end
     
-    if(err_h1 - err_h0 > Delta)
-       S(t) = 1;
-       Slabels(t) = 0;
-       costcurve(t) = cost;
-       continue;       
+    for i = 1:9
+       if err_h(i) - min_err > Delta
+           S(t) = 1;
+           Slabels(t) = min_i-1;
+           costcurve(t) = cost;
+           continue;
+       end
     end
+%     if(err_h0 - err_h1 > Delta)
+%        S(t) = 1;
+%        Slabels(t) = 1;
+%        costcurve(t) = cost;
+%        continue;        
+%     end
+%     
+%     if(err_h1 - err_h0 > Delta)
+%        S(t) = 1;
+%        Slabels(t) = 0;
+%        costcurve(t) = cost;
+%        continue;       
+%     end
     
     cost = cost + 1;
     costcurve(t) = cost;
-    queries = [queries, DATA(t)];
+    queries = [queries, t];
     
-    true_label = TRUE_LABELS(t);
-    Tlabels(t) = true_label;
-   
+    Tlabels(t) = TRUE_LABELS(t);
     T(t) = 1;
-    [nh, ~] = learnQ2(DATA(S==1), DATA(T==1), Slabels(S==1), Tlabels(T==1)); 
+    [nh, ~] = learnQ2(DATA(S==1,:), DATA(T==1,:), Slabels(S==1), Tlabels(T==1), TRUE_LABELS(t)); 
     % compute error
-    DHMGeneralizationError = [DHMGeneralizationError, getErr(nh, DATA, TRUE_LABELS)];
+    DHMGeneralizationError = [DHMGeneralizationError, getErr(nh, DATA, TRUE_LABELS, TRUE_LABELS(t))];
     UR = find(R==0);
     random_i = UR(randi(length(UR)));
     R(random_i) = 1;
     Rlabels(random_i) = TRUE_LABELS(random_i);
-    [hh, ~] = learnQ2(zeros(1, 0), DATA(R==1), zeros(1, 0), TRUE_LABELS(R==1)); 
-    RandGeneralizationError = [RandGeneralizationError, getErr(hh, DATA, TRUE_LABELS)];
+    [hh, ~] = learnQ2(zeros(0, 0), DATA(R==1,:), zeros(0, 0), TRUE_LABELS(R==1), TRUE_LABELS(random_i)); 
+    RandGeneralizationError = [RandGeneralizationError, getErr(hh, DATA, TRUE_LABELS, TRUE_LABELS(random_i))];
   
 end
     
