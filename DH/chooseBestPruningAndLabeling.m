@@ -13,7 +13,7 @@ function [Pbest, Lbest] = chooseBestPruningAndLabeling(n, p1, v, T, nsample)
     % label x's ratoe
     p1_LB = max(p1 - (1./n + sqrt(p1.*(1-p1)./n)), 0);
     A0 = p0_LB > 1/3;
-    A1 = p1_LB > 1/3;
+    A1 = p1_LB > 1/12;
     e1 = 1-p1;
     e1_tilde = zeros(1, length(e1))+1;
     e1_tilde(A1) = e1(A1); 

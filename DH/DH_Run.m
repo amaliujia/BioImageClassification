@@ -5,7 +5,7 @@ function DH_Run
     numtrials = 5; % run 5 times
     for i =1:numtrials
         display(sprintf('  Running trial %d',i))
-        [L,loss] = DH_SelectCase1(data, labels', T); % run the DH algorithm; L is the vector of predictions; loss is the loss curve over the iterations
+        [~,loss] = DH_SelectCase1(data, labels', T); % run the DH algorithm; L is the vector of predictions; loss is the loss curve over the iterations
         loss_avg = loss_avg + loss; % add the loss curves
     end
     loss_avg = loss_avg/numtrials; % compute average loss curve
