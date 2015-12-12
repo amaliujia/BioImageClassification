@@ -51,15 +51,40 @@ for t=1:numsamples
     partial_data = [DATA(S==1,:); DATA(t,:)];
     partial_label = [Slabels(S==1), 1];
     h = zeros(9, 27);
+    success = zeros(1, 9);
     for i = 1:9
         [h(i,:), flag_c] = learnQ2(partial_data, DATA(T==1,:), partial_label, Tlabels(T==1), i-1);
-        if flag_c == 1
-           S(t) = 1;
-           Slabels(t) = i-1; % should not be this one.
-           costcurve(t) = cost;
-           continue;
+        if flag_c == 0
+            success(i) = 1;
         end
     end
+    
+    success_index = find(success==1);
+     if length(success_index) == 1
+%            random_t = success_index(randi(length(success_index)));
+            S(t) = 1;
+            Slabels(t) = success_index(1)-1; % should be this one.
+            costcurve(t) = cost;
+            continue;
+%       SUnionT = [DATA(S==1,:); DATA(T==1,:)];
+%       SUnionTLabels = [Slabels(S==1), Tlabels(T==1)];
+%       min_err = inf;
+%       min_index = -1;
+%       for x = 1:length(success_index)
+%           e = getErr(h(success_index(x),:), [SUnionT; DATA(t,:)], [SUnionTLabels, success_index(x)-1], success_index(x)-1);
+%           if e < min_err
+%             min_err = e;
+%             min_index = success_index(x)-1;
+%           end
+%       end
+%       S(t) = 1;            
+%       Slabels(t) = min_index; % should be this one.           
+%       costcurve(t) = cost;
+%       continue;      
+      
+    end
+    
+    
 %     [h1, flag_1] = learnQ2(partial_data, DATA(T==1), partial_label, Tlabels(T==1));
 %     if(flag_1 == 1)
 %        S(t) = 1;
